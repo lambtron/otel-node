@@ -1,18 +1,44 @@
+import './tracing.cjs';
 import 'dotenv/config';
 import express from 'express';
 import client from 'prom-client';
+import winston from 'winston';
+import LokiTransport from 'winston-loki';
 
-// Instantiate Prometheus default system metrics collector.
-const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics();
+const app = express();
+const port = process.env.PORT || 8000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!OPENAI_API_KEY) {
   console.error("Please set OPENAI_API_KEY in .env file");
   process.exit(1);
 }
 
+// Instantiate Prometheus default system metrics collector.
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
+const logger = winston.createLogger({
+  transports: [
+    new LokiTransport({
+      host: "http://localhost:3100"
+    }),
+  ],
+});
+
+// Create logging middleware
+const requestLogger = (req, res, next) => {
+  logger.info('HTTP Request', {
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+  });
+  next();
+};
+
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(requestLogger);
 
 // Serve static HTML
 app.get('/', (req, res) => {

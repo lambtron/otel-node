@@ -4,7 +4,7 @@ global:
 scrape_configs:
   - job_name: 'node_app'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['host.docker.internal:8000']
 
 # docker run -d --name prometheus --network monitoring -p 9090:9090 \
 #   -v /tmp/otel/node-express/prometheus.yml:/etc/prometheus/prometheus.yml \
