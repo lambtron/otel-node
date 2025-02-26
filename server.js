@@ -1,11 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
+import client from 'prom-client';
 
-// Import prometheus.
-
-const app = express();
-const port = process.env.PORT || 8000;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// Instantiate Prometheus default system metrics collector.
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
 
 if (!OPENAI_API_KEY) {
   console.error("Please set OPENAI_API_KEY in .env file");
@@ -91,6 +90,12 @@ app.get('/', (req, res) => {
     </script>
 </body>
 </html>`);
+});
+
+// Create metrics endpoint for Prometheus.
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
 });
 
 // Chat API endpoint
