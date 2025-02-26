@@ -6,7 +6,7 @@ import winston from 'winston';
 import LokiTransport from 'winston-loki';
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 8888;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!OPENAI_API_KEY) {
@@ -21,17 +21,60 @@ collectDefaultMetrics();
 const logger = winston.createLogger({
   transports: [
     new LokiTransport({
-      host: "http://localhost:3100"
+      // host: "http://localhost:3100",
+      host: "http://localhost:4318",
+      path: "/v1/logs",
+      labels: {
+        app: 'chat-app',
+        environment: 'development'
+      },
+      json: true,
+      batching: false,
+      interval: 1,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.metadata(),
+        winston.format.json({
+          space: 0,
+          replacer: (key, value) => {
+            if (value instanceof Error) {
+              return {
+                message: value.message,
+                stack: value.stack,
+                ...value
+              };
+            }
+            return value;
+          }
+        })
+      ),
+      onConnectionError: (err) => {
+        console.error('Loki connection error:', err);
+      }
     }),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
   ],
 });
 
-// Create logging middleware
+// Add this after creating the logger
+logger.on('error', error => {
+  console.error('Logger error:', error);
+});
+
+// Modify the request logger to include more information
 const requestLogger = (req, res, next) => {
   logger.info('HTTP Request', {
     method: req.method,
     url: req.url,
     ip: req.ip,
+    headers: req.headers,
+    timestamp: new Date().toISOString(),
+    body: req.method === 'POST' ? req.body : undefined
   });
   next();
 };
@@ -166,4 +209,9 @@ app.post('/api/chat', async (req, res) => {
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
+  logger.info('Application started', { 
+    port: port,
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });

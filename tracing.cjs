@@ -1,32 +1,24 @@
-const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
-const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-http');
-const { PeriodicExportingMetricReader, MeterProvider } = require('@opentelemetry/sdk-metrics');
-const { Resource } = require('@opentelemetry/resources');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
+/*instrumentation.js*/
+// Require dependencies
+const { NodeSDK } = require('@opentelemetry/sdk-node');
+const { ConsoleSpanExporter } = require('@opentelemetry/sdk-trace-node');
+const {
+  getNodeAutoInstrumentations,
+} = require('@opentelemetry/auto-instrumentations-node');
+const {
+  PeriodicExportingMetricReader,
+  ConsoleMetricExporter,
+} = require('@opentelemetry/sdk-metrics');
 const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
 
-// Enable detailed logs for debugging
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
 
-// Define resource attributes
-const resource = new Resource({
-  [SemanticResourceAttributes.SERVICE_NAME]: 'express-app',
-  [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
+const sdk = new NodeSDK({
+  traceExporter: new ConsoleSpanExporter(),
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: new ConsoleMetricExporter(),
+  }),
+  instrumentations: [getNodeAutoInstrumentations()],
 });
 
-// Initialize tracing
-const tracerProvider = new NodeTracerProvider({ resource });
-const traceExporter = new OTLPTraceExporter({ url: 'http://localhost:4317/v1/traces' });
-tracerProvider.addSpanProcessor(new SimpleSpanProcessor(traceExporter));
-tracerProvider.register();
-
-// Initialize metrics
-const meterProvider = new MeterProvider({ resource });
-const metricExporter = new OTLPMetricExporter({ url: 'http://localhost:4317/v1/metrics' });
-meterProvider.addMetricReader(new PeriodicExportingMetricReader({ exporter: metricExporter }));
-
-console.log('✅ OpenTelemetry Tracing & Metrics Initialized');
-
-module.exports = { tracerProvider, meterProvider };
+sdk.start();
