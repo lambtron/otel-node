@@ -1,17 +1,30 @@
 server:
-  http_listen_port: 9080
+  http_listen_port: 9095
+  grpc_listen_port: 9096
+  log_level: debug
 
-positions:
-  filename: /tmp/positions.yaml
+scrape_configs:
+  - job_name: docker_container_logs
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: container
+      - source_labels: ["__meta_docker_container_log_stream"]
+        target_label: stream
+      - source_labels: ["__meta_docker_container_log_file"]
+        target_label: filename
+  - job_name: app_logs
+    static_configs:
+      - labels:
+          job: app_logs
+          __path__: /var/log/otel-node/*.log
 
+# Loki client configuration
 clients:
   - url: http://loki:3100/loki/api/v1/push
 
-scrape_configs:
-  - job_name: "node_logs"
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: "node_app"
-          __path__: "/var/log/*.log"
+positions:
+  filename: /tmp/promtail-positions.yaml

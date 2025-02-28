@@ -1,11 +1,7 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'node_app'
+  - job_name: "otel-collector"
     static_configs:
-      - targets: ['host.docker.internal:8000']
-
-# docker run -d --name prometheus --network monitoring -p 9090:9090 \
-#   -v /tmp/otel/node-express/prometheus.yml:/etc/prometheus/prometheus.yml \
-#   prom/prometheus
+      - targets: ["otel-collector:9464"]
