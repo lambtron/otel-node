@@ -1,10 +1,8 @@
-import 'dotenv/config';
-import express from 'express';
-
-// Import prometheus.
+require('dotenv').config();
+const express = require('express');
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 3000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!OPENAI_API_KEY) {
@@ -16,7 +14,7 @@ if (!OPENAI_API_KEY) {
 app.use(express.json());
 
 // Serve static HTML
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html>
 <head>
