@@ -1,5 +1,5 @@
-require('dotenv').config();
-const express = require('express');
+require("dotenv").config();
+const express = require("express");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,7 +14,8 @@ if (!OPENAI_API_KEY) {
 app.use(express.json());
 
 // Serve static HTML
-app.get('/', (_req, res) => {
+app.get("/", (_req, res) => {
+  console.log("Serving the chat interface...");
   res.send(`<!DOCTYPE html>
 <html>
 <head>
@@ -92,14 +93,15 @@ app.get('/', (_req, res) => {
 });
 
 // Chat API endpoint
-app.post('/api/chat', async (req, res) => {
+app.post("/api/chat", async (req, res) => {
   try {
     const { prompt } = req.body;
     console.log("Prompt:", prompt);
-    
+
     // Add your hardcoded system prompt here
-    const systemPrompt = "You are a helpful AI assistant. Please provide clear and concise responses.";
-    
+    const systemPrompt =
+      "You are a helpful AI assistant. Please provide clear and concise responses.";
+
     console.log("Sending request to OpenAI...");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -111,14 +113,14 @@ app.post('/api/chat', async (req, res) => {
         model: "gpt-3.5-turbo",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: prompt }
+          { role: "user", content: prompt },
         ],
       }),
     });
 
     console.log("Received response from OpenAI");
     const data = await response.json();
-    
+
     res.json({
       response: data.choices[0].message.content,
     });
