@@ -37,3 +37,9 @@ docker run --name lgtm -p 3001:3000 -p 4317:4317 -p 4318:4318 --rm -ti \
     -e GF_PATHS_DATA=/data/grafana \
     docker.io/grafana/otel-lgtm:0.8.1
 ```
+
+## Pure Deno solution
+
+```bash
+OTEL_DENO=true OTEL_SERVICE_NAME=chat-app deno run --unstable-otel --allow-net --allow-read --allow-env --env-file main.ts
+```
