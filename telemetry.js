@@ -8,12 +8,11 @@ const { OTLPTraceExporter } = require(
 const { OTLPMetricExporter } = require(
   "@opentelemetry/exporter-metrics-otlp-http",
 );
-const { getNodeAutoInstrumentations } = require(
-  "@opentelemetry/auto-instrumentations-node",
-);
+const { HttpInstrumentation } = require("@opentelemetry/instrumentation-http");
 
-// Enable debug logging if needed
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
+// const { getNodeAutoInstrumentations } = require(
+//   "@opentelemetry/auto-instrumentations-node",
+// );
 
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter({
@@ -25,11 +24,13 @@ const sdk = new NodeSDK({
   metricExporter: new OTLPMetricExporter({
     url: "http://localhost:4318/v1/metrics",
   }),
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [
+    new HttpInstrumentation(),
+  ],
+  // instrumentations: [getNodeAutoInstrumentations()],
 });
 
 sdk.start();
-console.log("Telemetry initialized");
 
 process.on("SIGTERM", () => {
   sdk.shutdown()

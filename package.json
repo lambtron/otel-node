@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "OTEL_SERVICE_NAME=chat-app OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 node server.js >> /var/log/chat-app.log 2>&1"
+    "start": "OTEL_SERVICE_NAME=chat-app OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 OTEL_LOG_LEVEL=error node server.js >> /var/log/chat-app.log 2>&1"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
