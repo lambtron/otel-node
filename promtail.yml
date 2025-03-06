@@ -13,6 +13,8 @@ scrape_configs:
       - json:
           expressions:
             trace_id: trace_id
+      - labels:
+          trace_id: trace_id
 
 # Loki client configuration
 clients:
