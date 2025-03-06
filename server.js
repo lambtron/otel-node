@@ -1,4 +1,6 @@
+require("./telemetry");
 require("dotenv").config();
+const { trace, context } = require("@opentelemetry/api");
 const express = require("express");
 
 const app = express();
@@ -10,12 +12,39 @@ if (!OPENAI_API_KEY) {
   process.exit(1);
 }
 
+/**
+ * Create own logger with trace id.
+ */
+
+function log(level, message, meta = {}) {
+  const activeSpan = trace.getSpan(context.active());
+  const traceId = activeSpan ? activeSpan.spanContext().traceId : "no-trace-id";
+
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    level,
+    message,
+    trace_id: traceId,
+    ...meta,
+  };
+
+  console.log(JSON.stringify(logEntry));
+}
+
 // Middleware to parse JSON bodies
+app.use((req, _res, next) => {
+  log("info", "Incoming request", {
+    path: req.path,
+    method: req.method,
+  });
+  next();
+});
 app.use(express.json());
 
 // Serve static HTML
 app.get("/", (_req, res) => {
-  console.log("Serving the chat interface...");
+  // console.log("Serving the chat interface...");
+  log("info", "Serving the chat interface...");
   res.send(`<!DOCTYPE html>
 <html>
 <head>
@@ -96,13 +125,15 @@ app.get("/", (_req, res) => {
 app.post("/api/chat", async (req, res) => {
   try {
     const { prompt } = req.body;
-    console.log("Prompt:", prompt);
+    // console.log("Prompt:", prompt);
+    log("info", `Prompt: ${prompt}`);
 
     // Add your hardcoded system prompt here
     const systemPrompt =
       "You are a helpful AI assistant. Please provide clear and concise responses.";
 
-    console.log("Sending request to OpenAI...");
+    // console.log("Sending request to OpenAI...");
+    log("info", "Sending request to OpenAI...");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -118,14 +149,16 @@ app.post("/api/chat", async (req, res) => {
       }),
     });
 
-    console.log("Received response from OpenAI");
+    // console.log("Received response from OpenAI");
+    log("info", "Received response from OpenAI");
     const data = await response.json();
 
     res.json({
       response: data.choices[0].message.content,
     });
   } catch (error) {
-    console.error("Error:", error);
+    // console.error("Error:", error);
+    log("info", `Error: ${error}`);
     res.status(500).json({
       error: error.message,
     });
@@ -134,5 +167,6 @@ app.post("/api/chat", async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  // console.log(`Server is running on http://localhost:${port}`);
+  log("info", `Server is running on http://localhost:${port}`);
 });
