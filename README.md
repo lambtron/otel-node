@@ -43,3 +43,28 @@ docker run --name lgtm -p 3001:3000 -p 4317:4317 -p 4318:4318 --rm -ti \
 ```
 
 Go to `localhost:3001` to view Grafana.
+
+## Deno example with .serve(), .fetch()
+
+Use the branch `deno-only`. This app is a modified, Deno-only version of the app
+in the `node` and `deno` branches, the primary change being replacing Express
+with `Deno.serve()`.
+
+Run the app:
+
+```bash
+OTEL_DENO=true OTEL_SERVICE_NAME=chat-app deno run --unstable-otel --allow-net --allow-read --allow-env --env-file main.ts
+```
+
+Start OTEL stack:
+
+```bash
+docker run --name lgtm -p 3001:3000 -p 4317:4317 -p 4318:4318 --rm -ti \
+    -v "$PWD"/lgtm/grafana:/data/grafana \
+    -v "$PWD"/lgtm/prometheus:/data/prometheus \
+    -v "$PWD"/lgtm/loki:/data/loki \
+    -e GF_PATHS_DATA=/data/grafana \
+    docker.io/grafana/otel-lgtm:0.8.1
+```
+
+Go to `localhost:3001` to view Grafana.
