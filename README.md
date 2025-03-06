@@ -5,7 +5,7 @@ setting up observability tooling in Deno and in Node.
 
 ## Node
 
-Use the branch `console-log-in-grafana`.
+Use the branch `node`.
 
 Run the app:
 
@@ -19,7 +19,11 @@ Run OTEL stack:
 docker compose up
 ```
 
+Go to `localhost:3001` to view Grafana.
+
 ## Deno
+
+Use the branch `deno`.
 
 Run the app:
 
@@ -37,3 +41,5 @@ docker run --name lgtm -p 3001:3000 -p 4317:4317 -p 4318:4318 --rm -ti \
     -e GF_PATHS_DATA=/data/grafana \
     docker.io/grafana/otel-lgtm:0.8.1
 ```
+
+Go to `localhost:3001` to view Grafana.
